@@ -9,16 +9,16 @@ Features:
 - Support timer interrupt (can be enabled or disabled)
 
 Files:
-*rtl/
+rtl/
     apb_slave.v
     register.v
     counter_control.v
     counter.v
     interrupt.v
     timer.v
-*tb/
+tb/
     test_bench.v
-*sim/
+sim/
     Makefile
     compile.f
     rtl.f

@@ -10,7 +10,7 @@ Features:
 
 Files: <br>
 rtl/ <br>
-    apb_slave.v <br>
+*    apb_slave.v <br>
     register.v <br>
     counter_control.v <br>
     counter.v <br>

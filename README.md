@@ -8,7 +8,7 @@ Features:
 - Counter can be counted based on system clock or divided up to 256
 - Support timer interrupt (can be enabled or disabled)
 
-Files:
+Files: <br>
 rtl/
     apb_slave.v
     register.v

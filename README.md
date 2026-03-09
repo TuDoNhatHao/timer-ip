@@ -7,7 +7,7 @@ Features:
 - Timer uses active low asynchronus reset
 - Counter can be counted based on system clock or divided up to 256
 - Support timer interrupt (can be enabled or disabled)
-<pre>
+<pre style="background: transparent; border: none; color: inherit;">
 Files: <br>
 rtl/ <br>
 apb_slave.v <br>

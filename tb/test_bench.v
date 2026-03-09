@@ -718,4 +718,83 @@ module test_bench;
             endcase
         end
     endtask
-                
+
+    task single_rw;
+        input [11:0] addr;
+        begin
+            //write
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+            tim_paddr   = addr;
+            tim_pwdata  = 32'h33333333;
+            register_name(addr);
+            @(posedge clk);
+            #1 tim_penable = 1;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+            case (addr)
+                TCR, TCMP0, TCMP1, TIER: begin
+                    wr_en(addr, 32'h77777777);
+                end
+                TDR0, TDR1: begin
+                    dbg_mode = 1;
+                    wr_en(THCSR, 32'h00000001);
+                    wr_en(TCR, 32'h00000001);
+                    wr_en(addr, 32'h77777777);
+                end
+                TISR: begin
+                wr_en(TCMP0, 32'h11111111);
+                wr_en(TDR0, 32'h22222222);
+                wr_en(TISR, 32'h00000001);
+                wr_en(addr, 32'h77777777);
+                end
+                THCSR: begin
+                    dbg_mode = 0;
+                    wr_en(addr, 32'h77777777);
+                end
+            endcase
+            @(posedge clk);
+            #1;
+            tim_psel    = 1;
+            tim_penable = 0;
+            tim_pwdata  = 32'hdddddddd;
+            @(posedge clk);
+            #1 tim_penable = 0;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+            //read
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+            @(posedge clk);
+            #1 tim_penable = 1;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+            
+            rd_en(addr,0);
+            
+            @(posedge clk);
+            #1;
+            tim_psel    = 1;
+            tim_penable = 0;
+            @(posedge clk);
+            #1 tim_penable = 0;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+        end
+    endtask

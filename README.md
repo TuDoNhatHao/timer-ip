@@ -9,17 +9,18 @@ Features:
 - Support timer interrupt (can be enabled or disabled)
 
 Files: <br>
-```rtl/``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```apb_slave.v``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```register.v``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```counter_control.v ```<br>
-&nbsp;&nbsp;&nbsp;&nbsp;```counter.v``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```interrupt.v``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```timer.v``` <br>
-```tb/``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```test_bench.v``` <br>
-```sim/``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```Makefile``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```compile.f``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```rtl.f``` <br>
-&nbsp;&nbsp;&nbsp;&nbsp;```tb.f``` <br>
+<ul style="list-style-type: none; padding-left: 0;">
+  <li><a href="./rtl/">rtl/</a></li>
+  <ul style="list-style-type: none; padding-left: 20px;">
+    <li><a href="./rtl/apb_slave.v">apb_slave.v</a></li>
+    <li><a href="./rtl/register.v">register.v</a></li>
+    <li><a href="./rtl/counter_control.v">counter_control.v</a></li>
+    <li><a href="./rtl/counter.v">counter.v</a></li>
+    <li><a href="./rtl/interrupt.v">interrupt.v</a></li>
+    <li><a href="./rtl/timer.v">timer.v</a></li>
+  </ul>
+  <li><a href="./tb/">tb/</a></li>
+  <ul style="list-style-type: none; padding-left: 20px;">
+    <li><a href="./tb/test_bench.v">test_bench.v</a></li>
+  </ul>
+</ul>

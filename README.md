@@ -7,20 +7,19 @@ Features:
 - Timer uses active low asynchronus reset
 - Counter can be counted based on system clock or divided up to 256
 - Support timer interrupt (can be enabled or disabled)
-<pre style="background: transparent; border: none; color: inherit;">
+
 Files: <br>
-rtl/ <br>
-apb_slave.v <br>
-    register.v <br>
-    counter_control.v <br>
-    counter.v <br>
-    interrupt.v <br>
-    timer.v <br>
-tb/ <br>
-    test_bench.v <br>
-sim/ <br>
-    Makefile <br>
-    compile.f <br>
-    rtl.f <br>
-    tb.f <br>
-</pre>
+```rtl/``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```apb_slave.v``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```register.v``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```counter_control.v ```<br>
+&nbsp;&nbsp;&nbsp;&nbsp;```counter.v``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```interrupt.v``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```timer.v``` <br>
+```tb/``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```test_bench.v``` <br>
+```sim/``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```Makefile``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```compile.f``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```rtl.f``` <br>
+&nbsp;&nbsp;&nbsp;&nbsp;```tb.f``` <br>

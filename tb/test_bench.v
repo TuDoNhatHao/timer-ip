@@ -498,3 +498,224 @@ module test_bench;
             endcase
         end
     endtask
+
+    task wr_en;
+        input [11:0] addr;
+        input [31:0] data;
+        begin
+            @(posedge clk);
+            #1;
+            tim_pwrite  = 1;
+            tim_psel    = 1;
+            tim_penable = 0;
+            tim_paddr   = addr;
+            tim_pwdata  = data;
+            byte_access(tim_pstrb, tim_pwdata);
+            @(posedge clk);
+            #1 tim_penable = 1;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_pwrite  = 0;
+            tim_psel    = 0;
+            tim_penable = 0;
+        end
+    endtask
+
+    task rd_en;
+        input [11:0] addr;
+        input [3:0] testcase;
+        begin
+            @(posedge clk);
+            #1;
+            tim_pwrite  = 0;
+            tim_psel    = 1;
+            tim_penable = 0;
+            tim_paddr   = addr;
+            @(posedge clk);
+            #1 tim_penable = 1;
+            @(posedge clk);
+            #1;
+            test_case(testcase);
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+        end
+    endtask
+
+    task reset_chk;
+      input [11:0] addr;
+      begin
+        @(posedge clk);
+        #1;
+        rst_n = 0;
+        @(posedge clk);
+        #1;
+        rst_n = 1;
+        tim_pwrite  = 0;
+        tim_psel    = 1;
+        tim_paddr   = addr;
+        @(posedge clk);
+        #1 tim_penable = 1;
+        @(posedge clk);
+        #1;
+        if (tim_paddr === TCR)
+        begin
+            if (tim_prdata === 32'h00000100) begin
+                $display("------------------------------------------------------------");
+                $display($stime = %t --------PASS: The reset value is correct---------%s", GREEN, $stime);
+                $display("------------------------------------------------------------");
+            end else begin
+                $display("------------------------------------------------------------");
+                $display($stime = %t --------FAIL: The reset value is not correct---------%s", RED, $stime);
+                $display("Exp:32'h00000100 Act:32'h%8h", tim_prdata);
+            end
+        end else if (tim_paddr === TCMP0 || tim_paddr === TCMP1)
+        begin
+            if (tim_prdata === 32'hffffffff) begin
+                $display("------------------------------------------------------------");
+                $display($stime = %t --------PASS: The reset value is correct---------%s", GREEN, $stime);
+                $display("------------------------------------------------------------");
+            end else begin
+                $display("------------------------------------------------------------");
+                $display($stime = %t --------FAIL: The reset value is not correct---------%s", RED, $stime);
+                $display("Exp:32'hffffffff Act:32'h%8h", tim_prdata);
+            end
+        end else
+        begin
+            if (tim_prdata == 32'h00000000) begin
+                $display("------------------------------------------------------------");
+                $display("%stime = %t------------------PASS: The reset value is correct------------------%s", GREEN, $time);
+            end else begin
+                $display("------------------------------------------------------------");
+                $display("%stime = %t------------------FAIL: The reset value is not correct------------------%s", RED, $time);
+                $display("Exp:32'h00000000    Act:32'h%8h------------------", tim_prdata);
+            end
+        end
+        @(posedge clk);
+        #1;
+        tim_psel    = 0;
+        tim_penable = 0;
+      end
+    endtask
+
+    task rw_access;
+        input [11:0] addr;
+        input [31:0] data;
+        begin
+            case (addr)
+                TCR, TCMP0, TCMP1, TIER: begin
+                    wr_en(addr, data);
+                    rd_en(addr, 0);
+                end
+                TDR0, TDR1: begin
+                    dbg_mode = 1;
+                    wr_en(THCSR, 32'h00000001);
+                    wr_en(TCR, 32'h00000001);
+                    wr_en(addr, data);
+                    rd_en(addr, 0);
+                end
+                TISR: begin
+                    wr_en(TCMP0, 32'h11111111);
+                    wr_en(TDR0, 32'h22222222);
+                    wr_en(TISR, 32'h00000001);
+                    wr_en(addr, data);
+                    rd_en(addr, 0);
+                end
+                THCSR: begin
+                    dbg_mode = 0;
+                    wr_en(addr, data);
+                    rd_en(addr, 0);
+                end
+                default: begin
+                    wr_en(addr, data);
+                    rd_en(addr, 0);
+                end
+            endcase
+        end
+    endtask
+
+    task register_tcr;
+        output [31:0] exp_data_tcr;
+        begin
+            if (timer_en === 0) begin
+                if (wdata[11:8] < 9) begin
+                    div_val = wdata[11:8];
+                end
+                div_en = wdata[1];
+                exp_data_tcr = {20'b0, div_val, 6'b0, wdata[1:0]};
+            end else exp_data_tcr = {20'b0, div_val, 6'b0, div_en, wdata[0]};
+            timer_en = wdata[0];
+        end
+    endtask
+
+    task rw_checker;
+        reg [31:0] exp_data_tcr;
+        begin
+            case (tim_paddr)
+                TCR:
+                begin
+                    register_tcr(exp_data_tcr);
+                    if (tim_prdata === exp_data_tcr)
+                    begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------PASS: Read value is same as write value----------------%s", GREEN, $time, RESET);
+                    end else begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------FAIL: Read value is not same as write value----------------%s", RED, $time, RESET);
+                        $display("Exp:%8h    Actual:%8h----------------", exp_data_tcr, tim_prdata);
+                    end
+                end
+                TDR0, TDR1, TCMP0, TCMP1:
+                begin
+                    if (tim_prdata === wdata)
+                    begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------PASS: Read value is same as write value----------------%s", GREEN, $time, RESET);
+                        $display("------------------------------------------------------------");
+                    end else begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------FAIL: Read value is not same as write value----------------%s", RED, $time, RESET);
+                        $display("Exp:%8h        Actual:%8h----------------------------", wdata, tim_prdata);
+                    end
+                end
+                TIER,THCSR:
+                begin
+                    if (tim_prdata === {31'b0, wdata[0]})
+                    begin
+                        $display("@%stime = %t----------------PASS: Read value is same as write value-----------------%s", GREEN, $time, RESET);
+                    end else begin
+                        $display("@%stime = %t----------------FAIL: Read value is not same as write value-----------------%s", RED, $time, RESET);
+                        $display("Exp:00000000%1h Actual:%8h", wdata[0], tim_prdata);
+                    end
+                end
+                TISR:
+                begin
+                    if (tim_prdata === 32'b0)
+                    begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------PASS: Read value is same as write value-----------------%s", GREEN, $time, RESET);
+                        $display("------------------------------------------------------------");
+                    end else begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------FAIL: Read value is not same as write value-----------------%s", RED, $time, RESET);
+                        $display("Exp:32'h00000000          Actual:%8h----------------------------", tim_prdata);
+                    end
+                end
+                default:
+                begin
+                    if (tim_prdata === 32'b0)
+                    begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------PASS: Read value is same as write value----------------%s", GREEN, $time, RESET);
+                    end else begin
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------FAIL: Read value is not same as write value----------------%s", RED, $time, RESET);
+                        $display("Exp:32'h00000000        Actual:%8h----------------", tim_prdata);
+                    end
+                end
+            endcase
+        end
+    endtask
+                

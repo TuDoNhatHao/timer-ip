@@ -1195,6 +1195,7 @@ module test_bench;
                                     dbg_mode = 1;
                                     tim_pstrb = 4'b1111;
                                     wr_en(THCSR,32'h00000001);
+                                    wr_en(TISR,32'h00000001);
                                     wr_en(TCR,32'h00000000);
                                     wr_en(TCMP0,32'hffffeee);
                                     //gen expected data

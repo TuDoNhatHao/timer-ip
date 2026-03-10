@@ -3,3 +3,4 @@
 ../rtl/interrupt.v
 ../rtl/counter_control.v
 ../rtl/counter.v
+../rtl/timer.v

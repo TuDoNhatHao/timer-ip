@@ -10,6 +10,11 @@ Features:
 
 Files: <br>
 <ul style="list-style-type: none; padding-left: 0;">
+    <li><a href="./docs/">docs/</a></li>
+  <ul style="list-style-type: none; padding-left: 20px;">
+    <li><a href="./docs/Timer_Design_Specification.docx">Timer_Design_Specification.docx</a></li>
+    <li><a href="./docs/register_checklist.xlsx">register_checklist.xlsx</a></li>
+  </ul>
   <li><a href="./rtl/">rtl/</a></li>
   <ul style="list-style-type: none; padding-left: 20px;">
     <li><a href="./rtl/apb_slave.v">apb_slave.v</a></li>
@@ -22,10 +27,5 @@ Files: <br>
   <li><a href="./tb/">tb/</a></li>
   <ul style="list-style-type: none; padding-left: 20px;">
     <li><a href="./tb/test_bench.v">test_bench.v</a></li>
-  </ul>
-  <li><a href="./docs/">docs/</a></li>
-  <ul style="list-style-type: none; padding-left: 20px;">
-    <li><a href="./docs/Timer_Design_Specification.docx">Timer_Design_Specification.docx</a></li>
-    <li><a href="./docs/register_checklist.xlsx">register_checklist.xlsx</a></li>
   </ul>
 </ul>

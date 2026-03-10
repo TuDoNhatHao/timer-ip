@@ -661,6 +661,7 @@ module test_bench;
                     begin
                         $display("------------------------------------------------------------");
                         $display("%stime = %t----------------PASS: Read value is same as write value----------------%s", GREEN, $time, RESET);
+                        $display("------------------------------------------------------------");
                     end else begin
                         $display("------------------------------------------------------------");
                         $display("%stime = %t----------------FAIL: Read value is not same as write value----------------%s", RED, $time, RESET);
@@ -684,7 +685,9 @@ module test_bench;
                 begin
                     if (tim_prdata === {31'b0, wdata[0]})
                     begin
-                        $display("@%stime = %t----------------PASS: Read value is same as write value-----------------%s", GREEN, $time, RESET);
+                        $display("------------------------------------------------------------");
+                        $display("%stime = %t----------------PASS: Read value is same as write value----------------%s", GREEN, $time, RESET);
+                        $display("------------------------------------------------------------");
                     end else begin
                         $display("@%stime = %t----------------FAIL: Read value is not same as write value-----------------%s", RED, $time, RESET);
                         $display("Exp:00000000%1h Actual:%8h", wdata[0], tim_prdata);
@@ -709,6 +712,7 @@ module test_bench;
                     begin
                         $display("------------------------------------------------------------");
                         $display("%stime = %t----------------PASS: Read value is same as write value----------------%s", GREEN, $time, RESET);
+                        $display("------------------------------------------------------------");
                     end else begin
                         $display("------------------------------------------------------------");
                         $display("%stime = %t----------------FAIL: Read value is not same as write value----------------%s", RED, $time, RESET);
@@ -798,3 +802,194 @@ module test_bench;
             tim_penable = 0;
         end
     endtask
+
+    task continuous_rw;
+        begin //write
+            @(posedge clk); 
+            #1;
+            tim_psel = 0;
+            tim_penable = 0;
+            tim_paddr = 12'h0;
+            tim_pwdata = 32'hdddddddd;
+            @(posedge clk);
+            #1 tim_penable = 1;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_psel = 0;
+            tim_penable = 0;
+            for (integer i = 0; i <= 28; i=i+4) begin
+                case (i)
+                    TCR: begin
+                        wr_en(TCSR,32'h11111111);
+                        exp_data[i/4] = wdata;
+                    end
+                    TDR0:begin
+                        dbg_mode = 1;
+                        wr_en(THCSR,32'h00000001);
+                        wr_en(i,32'h22222222);
+                        exp_data[i/4] = wdata;
+                    end
+                    TDR1:begin
+                        wr_en(i,32'h44444444);
+                        exp_data[i/4] = wdata;
+                    end
+                    TCMP0:begin
+                            wr_en(i,32'h55555555);
+                            exp_data[i/4] = wdata;
+                    end
+                    TCMP1:begin
+                            wr_en(i,32'h66666666);
+                            exp_data[i/4] = wdata;
+                    end
+                    TIER:begin
+                            wr_en(i,32'h99999999);
+                            exp_data[i/4] = wdata;
+                    end
+                    TISR:begin
+                            wr_en(TISR,32'h00000001);
+                            wr_en(i,32'h77777777);
+                            exp_data[i/4] = wdata;
+                    end
+                    THCSR:begin
+                            wr_en(i,32'hbbbbbbbb);
+                            exp_data[i/4] = wdata;
+                    end
+                endcase
+            end
+            @(posedge clk);
+            #1;
+            tim_pwrite = 1;
+            tim_psel = 0;
+            tim_penable = 0;
+            tim_pwdata = 32'hffffffff;
+            @(posedge clk);
+            #1 tim_penable = 0;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_pwrite = 0;
+            tim_psel    = 0;
+            tim_penable = 0;
+            //read
+            @(posedge clk);
+            #1;
+            tim_psel = 0;
+            tim_penable = 0;
+            @(posedge clk);
+            #1 tim_penable = 1;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+            
+            for (integer i = 0; i <= 28; i=i+4) begin
+                    register_name(i);
+                    rd_en(i,1);
+            end
+            
+            @(posedge clk);
+            #1;
+            tim_psel = 1;
+            tim_penable = 0;
+            @(posedge clk);
+            #1 tim_penable = 0;
+            @(posedge clk);
+            @(posedge clk);
+            #1;
+            tim_psel    = 0;
+            tim_penable = 0;
+        end
+    endtask
+
+    task register_tcr_continuous;
+        input [31:0] exp_input;
+        output [31:0] exp_data_tcr;
+        begin
+                if (timer_en === 0) begin
+                        if (exp_input[11:8] < 9) begin
+                                div_val = exp_input[11:8];
+                        end
+                        div_en = exp_input[1];
+                        exp_data_tcr = {20'b0,div_val,6'b0,exp_input[1:0]};
+                end else exp_data_tcr = {20'b0,div_val,6'b0,div_en,exp_input[0]};
+                timer_en = exp_input[0];
+        end
+    endtask
+
+    task rw_checker_continuous;
+         reg [31:0] exp_data_tcr;
+         input [31:0] exp_input [7:0];
+         begin
+                 case (tim_paddr)
+                         TCR:
+                         begin
+                                 register_tcr_continuous(exp_input[tim_paddr/4],exp_data_tcr);
+                                 if (tim_prdata === exp_data_tcr)
+                                 begin
+                                         $display("--------------------------------------------------------------------------------");
+                                         $display("%stime = %t------------------PASS: Read value is same as write value-------------------%s",GREEN,$time,RESET);
+                                         $display("--------------------------------------------------------------------------------");
+                                 end else begin
+                                         $display("--------------------------------------------------------------------------------");
+                                         $display("%stime = %t-----------------FAIL: Read value is not same as write value-------------------%s",RED,$time,RESET);
+                                         $display("Exp:%8h     Actual:%8h----------------------------------------------------------------",exp_data_tcr,tim_prdata);
+                                 end
+                         end
+                         TDR0,TDR1,TCMP0,TCMP1:
+                            begin
+                                    if (tim_prdata === exp_input[tim_paddr/4])
+                                    begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t------------------PASS: Read value is same as write value-------------------%s",GREEN,$time,RESET);
+                                            $display("--------------------------------------------------------------------------------");
+                                    end else begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t-----------------FAIL: Read value is not same as write value-------------------%s",RED,$time,RESET);
+                                            $display("Exp:%8h     Actual:%8h----------------------------------------------------------------",exp_input[tim_paddr/4],tim_prdata);
+                                    end
+                            end
+                         TIER:
+                            begin
+                                    if (tim_prdata === {31'b0,exp_input[tim_paddr/4][0]})
+                                    begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t------------------PASS: Read value is same as write value-------------------%s",GREEN,$time,RESET);
+                                            $display("--------------------------------------------------------------------------------");
+                                    end else begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t-----------------FAIL: Read value is not same as write value-------------------%s",RED,$time,RESET);
+                                            $display("Exp:0000000%1h     Actual:%8h----------------------------------------------------------------",exp_input[tim_paddr/4][0],tim_prdata);
+                                    end
+                            end
+                         THCSR:
+                            begin
+                                    if (tim_prdata === {30'b0,1'b1,exp_input[tim_paddr/4][0]})
+                                    begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t------------------PASS: Read value is same as write value-------------------%s",GREEN,$time,RESET);
+                                            $display("--------------------------------------------------------------------------------");
+                                    end else begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t-----------------FAIL: Read value is not same as write value-------------------%s",RED,$time,RESET);
+                                            $display("Exp:0000001%1h     Actual:%8h----------------------------------------------------------------",exp_input[tim_paddr/4][0],tim_prdata);
+                                    end
+                            end
+                         TISR:
+                            begin
+                                    if (tim_prdata === 32'b0)
+                                    begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t------------------PASS: Read value is same as write value-------------------%s",GREEN,$time,RESET);
+                                            $display("--------------------------------------------------------------------------------");
+                                    end else begin
+                                            $display("--------------------------------------------------------------------------------");
+                                            $display("%stime = %t-----------------FAIL: Read value is not same as write value-------------------%s",RED,$time,RESET);
+                                            $display("Exp:32'h00000000     Actual:%8h----------------------------------------------------------------",tim_prdata);
+                                    end
+                            end
+                 endcase
+         end
+    endtask
+       
